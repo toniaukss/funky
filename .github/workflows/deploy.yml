@@ -1,0 +1,39 @@
+name : 'Deploy'
+
+on:
+    workflow_dispatch
+
+jobs:
+
+    deploy-ressources:
+        name: "deploy-ressources"
+        runs-on: ubuntu-latest
+        defaults:
+          run:
+            shell: bash
+            working-directory: ././
+        
+        steps:
+            -   uses: azure/login@v1
+                with:
+                    creds: ${{ secrets.AZURE_CREDENTIALS }}
+            - name: Checkout the repository to the runner
+              uses: actions/checkout@v2
+        
+            - name: Setup Terraform with specified version on the runner
+              uses: hashicorp/setup-terraform@v2
+            
+            - name: Terraform init
+              id: init
+              run: terraform init
+               
+            - name: Terraform validate
+              id: validate
+              run: terraform validate
+            
+            - name: Terraform plan
+              id: plan
+              run: terraform plan -no-color -input=false -out tf.plan
+
+            - name: Terraform Apply
+              run: terraform apply -input=false tf.plan
